@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
@@ -24,12 +23,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UwScene extends ApplicationAdapter {
-    private Set<Disposable> disposables = new HashSet<>();
-    private Set<RenderUpdatable> updatables = new HashSet<>();
+    private final Set<Disposable> disposables = new HashSet<>();
+    private final Set<RenderUpdatable> updatables = new HashSet<>();
 
     private BodilessPlayer player;
-
-
     private GLTFLoader gltfLoader;
     private SceneManager sceneManager;
     private Cubemap diffuseCubemap;
@@ -43,24 +40,33 @@ public class UwScene extends ApplicationAdapter {
 //    private Vector3 moveTransition = new Vector3();
 //    private Vector3 curPosition = new Vector3();
 
-    private float camHeight = 5f;
-
     @Override
     public void create() {
+        Gdx.input.setCursorPosition(0, 0);
+        Gdx.input.setCursorCatched(true);
         // create scene
         sceneManager = new SceneManager();
+        disposables.add(sceneManager);
+
         gltfLoader = new GLTFLoader();
+        disposables.add(gltfLoader);
 
-        var stone1Asset = gltfLoader.load(Gdx.files.internal("3d/stones/stone1/stone1.gltf"));
-        disposables.add(stone1Asset);
-        var stone1 = new BasicObject(new Vector3(0, 0, 0), stone1Asset);
-        sceneManager.addScene(stone1.getScene());
+        var stone1Asset1 = gltfLoader.load(Gdx.files.internal("3d/stones/stone1/stone1.gltf"));
+        var stone1Asset2 = gltfLoader.load(Gdx.files.internal("3d/stones/stone1/stone1.gltf"));
 
-        player = new BodilessPlayer(new Vector3(0, camHeight, -4f));
+        Set.of(
+                new BasicObject(new Vector3(0, 1, 0), stone1Asset1),
+                new BasicObject(new Vector3(1, 0, 3), stone1Asset2)
+        ).forEach(st -> {
+            updatables.add(st);
+            sceneManager.addScene(st.getScene());
+        });
+
+        player = new BodilessPlayer(new Vector3(0, 0, 4));
         sceneManager.setCamera(player.getCamera());
 
+        Gdx.input.setInputProcessor(player);
         updatables.add(player);
-
 
         // setup light
         light = new DirectionalLightEx();
@@ -71,12 +77,16 @@ public class UwScene extends ApplicationAdapter {
         // setup quick IBL (image based lighting)
         IBLBuilder iblBuilder = IBLBuilder.createOutdoor(light);
         environmentCubemap = iblBuilder.buildEnvMap(1024);
+        disposables.add(environmentCubemap);
         diffuseCubemap = iblBuilder.buildIrradianceMap(256);
+        disposables.add(diffuseCubemap);
         specularCubemap = iblBuilder.buildRadianceMap(10);
+        disposables.add(specularCubemap);
         iblBuilder.dispose();
 
         // This texture is provided by the library, no need to have it in your assets.
-        brdfLUT = new Texture(Gdx.files.classpath("2d/img.png"));
+        brdfLUT = new Texture(Gdx.files.classpath("net/mgsx/gltf/shaders/brdfLUT.png"));
+        disposables.add(brdfLUT);
 
         sceneManager.setAmbientLight(1000f);
         sceneManager.environment.set(new PBRTextureAttribute(PBRTextureAttribute.BRDFLUTTexture, brdfLUT));
@@ -85,6 +95,7 @@ public class UwScene extends ApplicationAdapter {
 
         // setup skybox
         skybox = new SceneSkybox(environmentCubemap);
+        disposables.add(skybox);
         sceneManager.setSkyBox(skybox);
     }
 
@@ -134,12 +145,6 @@ public class UwScene extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-        sceneManager.dispose();
         disposables.forEach(Disposable::dispose);
-        environmentCubemap.dispose();
-        diffuseCubemap.dispose();
-        specularCubemap.dispose();
-        brdfLUT.dispose();
-        skybox.dispose();
     }
 }
