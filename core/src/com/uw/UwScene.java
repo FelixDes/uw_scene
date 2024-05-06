@@ -10,8 +10,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
-import com.uw.object.unplayable.BasicObject;
-import net.mgsx.gltf.loaders.gltf.GLTFLoader;
+import com.uw.object.unplayable.impl.SandTerrain;
+import com.uw.object.unplayable.impl.Stone;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx;
@@ -27,7 +27,6 @@ public class UwScene extends ApplicationAdapter {
     private final Set<RenderUpdatable> updatables = new HashSet<>();
 
     private BodilessPlayer player;
-    private GLTFLoader gltfLoader;
     private SceneManager sceneManager;
     private Cubemap diffuseCubemap;
     private Cubemap environmentCubemap;
@@ -45,18 +44,15 @@ public class UwScene extends ApplicationAdapter {
         Gdx.input.setCursorPosition(0, 0);
         Gdx.input.setCursorCatched(true);
         // create scene
-        sceneManager = new SceneManager();
-        disposables.add(sceneManager);
+        sceneManager = dis(new SceneManager());
 
-        gltfLoader = new GLTFLoader();
-        disposables.add(gltfLoader);
-
-        var stone1Asset1 = gltfLoader.load(Gdx.files.internal("3d/stones/stone1/stone1.gltf"));
-        var stone1Asset2 = gltfLoader.load(Gdx.files.internal("3d/stones/stone1/stone1.gltf"));
+        SandTerrain terrain = dis(SandTerrain.of(new Vector3(0, 0, 0)));
+//        terrain.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
+        sceneManager.addScene(terrain.getScene());
 
         Set.of(
-                new BasicObject(new Vector3(0, 1, 0), stone1Asset1),
-                new BasicObject(new Vector3(1, 0, 3), stone1Asset2)
+                dis(Stone.of(new Vector3(0, 1, 0))),
+                dis(Stone.of(new Vector3(0, 1, 0)))
         ).forEach(st -> {
             updatables.add(st);
             sceneManager.addScene(st.getScene());
@@ -146,5 +142,10 @@ public class UwScene extends ApplicationAdapter {
     @Override
     public void dispose() {
         disposables.forEach(Disposable::dispose);
+    }
+
+    private <T extends Disposable> T dis(T obj) {
+        disposables.add(obj);
+        return obj;
     }
 }
