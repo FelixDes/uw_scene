@@ -1,38 +1,47 @@
 package com.uw.object.unplayable.impl;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.uw.object.unplayable.Terrain;
-import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 
 
 public class SandTerrain extends Terrain {
-    protected SandTerrain(Vector3 position, GLTFLoader loader) {
-        super(position, loader);
-//        ModelBuilder mb = new ModelBuilder();
-//        mb.begin();
-//        mb.part("terrain", field.mesh, GL20.GL_TRIANGLES, new Material());
-//        new ModelInstance()
-//
-//        System.out.println(this.sceneAsset.meshes);
+    private final BoundingBox boundingBox;
+
+    public SandTerrain(Vector3 position) {
+        super(position, Gdx.files.internal("3d/terrain/terrain.gltf"), new Pixmap(Gdx.files.internal("3d/terrain/heightmap.png")));
+        this.sceneAsset.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
+
+        boundingBox = new ModelInstance(this.sceneAsset.scene.model).calculateBoundingBox(new BoundingBox());
     }
 
     @Override
     public float getHeight(float x, float z) {
-        return 0;
-    }
+        float h1 = boundingBox.getDepth();
+        float w1 = boundingBox.getWidth();
 
-    @Override
-    public FileHandle getModelFile() {
-        return Gdx.files.internal("3d/terrain/terrain.gltf");
-    }
+        float h2 = heightMap.getHeight();
+        float w2 = heightMap.getWidth();
 
-    public static SandTerrain of(Vector3 position) {
-        GLTFLoader loader = new GLTFLoader();
-        return new SandTerrain(position, loader);
+        float x1 = x - boundingBox.min.x;
+        float y1 = z - boundingBox.min.z;
+
+        int x2 = (int) (w2 * x1 / w1);
+        int y2 = (int) (h2 * y1 / h1);
+
+        var height = boundingBox.getHeight();
+        var offset = Math.abs(boundingBox.min.y);
+
+        var c = heightMap.getPixel(x2, y2);
+        System.out.println(c);
+        // todo: calc colorCoefficient
+        var colorCoefficient = 1;
+
+        return (height + offset) * colorCoefficient;
     }
 }
     

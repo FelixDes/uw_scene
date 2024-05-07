@@ -42,23 +42,22 @@ public class UwScene extends ApplicationAdapter {
     @Override
     public void create() {
         Gdx.input.setCursorPosition(0, 0);
-        Gdx.input.setCursorCatched(true);
+//        Gdx.input.setCursorCatched(true);
         // create scene
         sceneManager = dis(new SceneManager());
 
-        SandTerrain terrain = dis(SandTerrain.of(new Vector3(0, 0, 0)));
-//        terrain.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
+        SandTerrain terrain = dis(new SandTerrain(new Vector3(0, 0, 0)));
         sceneManager.addScene(terrain.getScene());
 
         Set.of(
-                dis(Stone.of(new Vector3(0, 1, 0))),
-                dis(Stone.of(new Vector3(0, 1, 0)))
+                dis(new Stone(new Vector3(0, 1, 0))),
+                dis(new Stone(new Vector3(0, 1, 0)))
         ).forEach(st -> {
             updatables.add(st);
             sceneManager.addScene(st.getScene());
         });
 
-        player = new BodilessPlayer(new Vector3(0, 0, 4));
+        player = new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0));
         sceneManager.setCamera(player.getCamera());
 
         Gdx.input.setInputProcessor(player);
