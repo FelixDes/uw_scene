@@ -37,6 +37,15 @@ public class SandTerrain extends Terrain {
         var offset = Math.abs(boundingBox.min.y);
 
         var c = heightMap.getPixel(x2, y2);
+        int alpha = (c >> 24) & 0xFF;
+        int red = (c >> 16) & 0xFF;
+        int green = (c >> 8) & 0xFF;
+        int blue = c & 0xFF;
+
+        System.out.println("Alpha: " + alpha);
+        System.out.println("Red: " + red);
+        System.out.println("Green: " + green);
+        System.out.println("Blue: " + blue);
         System.out.println(c);
         // todo: calc colorCoefficient
         var colorCoefficient = 1;

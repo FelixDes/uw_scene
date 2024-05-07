@@ -2,13 +2,16 @@ package com.uw.object.player;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.uw.RenderUpdatable;
+import com.uw.domain.Position;
+import com.uw.service.WorldInteractionResolverService;
 
-public class BodilessPlayer implements RenderUpdatable, InputProcessor {
+public class BodilessPlayer extends InputAdapter implements RenderUpdatable  {
     // CAMERA
     private final PerspectiveCamera camera;
 
@@ -22,20 +25,26 @@ public class BodilessPlayer implements RenderUpdatable, InputProcessor {
     private final Vector3 tmp = new Vector3();
 
     // MOVEMENT
-    public final Vector3 position;
+    public final Position position;
     public float boostedSpeedMultiplier = 1.5f;
     public float forwardSpeed = 20f;
     public float sideSpeed = 10f;
 
     private final IntIntMap keys = new IntIntMap();
 
-    public BodilessPlayer(Vector3 position) {
-        this.position = new Vector3(position.x, position.y + playerHeight, position.z);
+    // PROCESSING
+
+    private final WorldInteractionResolverService moveService;
+
+    public BodilessPlayer(Vector3 position, WorldInteractionResolverService moveService) {
+        this.position = new Position(new Vector3(position.x, position.y + playerHeight, position.z));
 
         camera = new PerspectiveCamera(FOV, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(this.position);
+        camera.position.set(this.position.getPos());
         camera.near = NEAR;
         camera.far = FAR;
+
+        this.moveService = moveService;
     }
 
     public PerspectiveCamera getCamera() {
@@ -85,50 +94,23 @@ public class BodilessPlayer implements RenderUpdatable, InputProcessor {
             computedSideSpeed *= boostedSpeedMultiplier;
         }
 
+        Vector3 shift = new Vector3(0,0,0);
         if (keys.containsKey(Input.Keys.W)) {
-            position.mulAdd(rotationVector, computedForwardSpeed);
+            shift.mulAdd(rotationVector, computedForwardSpeed);
         }
         if (keys.containsKey(Input.Keys.S)) {
-            position.mulAdd(rotationVector.cpy().scl(-1), computedForwardSpeed);
+            shift.mulAdd(rotationVector.cpy().scl(-1), computedForwardSpeed);
         }
         if (keys.containsKey(Input.Keys.A)) {
-            position.mulAdd(rotationRotatedVector.cpy().scl(-1), computedSideSpeed);
+            shift.mulAdd(rotationRotatedVector.cpy().scl(-1), computedSideSpeed);
         }
         if (keys.containsKey(Input.Keys.D)) {
-            position.mulAdd(rotationRotatedVector, computedSideSpeed);
+            shift.mulAdd(rotationRotatedVector, computedSideSpeed);
         }
 
-        camera.position.set(position);
+        moveService.performMove(position, shift);
+
+        camera.position.set(position.getPos());
         camera.update(true);
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return false;
-    }
-
-    @Override
-    public boolean scrolled(float amountX, float amountY) {
-        return false;
     }
 }
