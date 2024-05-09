@@ -7,17 +7,19 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
 import com.uw.object.unplayable.BasicGltfObject;
 import com.uw.object.unplayable.impl.SandTerrain;
-import com.uw.object.unplayable.impl.Stone;
+import com.uw.object.unplayable.impl.Stone1;
+import com.uw.object.unplayable.impl.Stone2;
 import com.uw.service.CollisionRegistry;
 import com.uw.service.WorldInteractionResolverService;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
-import net.mgsx.gltf.scene3d.lights.DirectionalLightEx;
+import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.scene.SceneManager;
 import net.mgsx.gltf.scene3d.scene.SceneSkybox;
 import net.mgsx.gltf.scene3d.utils.IBLBuilder;
@@ -33,20 +35,9 @@ public class UwScene extends ApplicationAdapter {
     private final Set<RenderUpdatable> updatables = new HashSet<>();
 
     private CollisionRegistry cRegistry;
-    private WorldInteractionResolverService interactionResolver;
 
     private BodilessPlayer player;
     private SceneManager sceneManager;
-    private Cubemap diffuseCubemap;
-    private Cubemap environmentCubemap;
-    private Cubemap specularCubemap;
-    private Texture brdfLUT;
-    private SceneSkybox skybox;
-    private DirectionalLightEx light;
-
-//    private Matrix4 playerTransform = new Matrix4();
-//    private Vector3 moveTransition = new Vector3();
-//    private Vector3 curPosition = new Vector3();
 
     @Override
     public void create() {
@@ -64,14 +55,13 @@ public class UwScene extends ApplicationAdapter {
         sceneManager.addScene(terrain.getScene());
 
         // create interaction resolver
-        interactionResolver = new WorldInteractionResolverService(terrain, cRegistry);
+        var interactionResolver = new WorldInteractionResolverService(terrain, cRegistry);
 
         // create common objects
         Set.of(
-                col(dis(new Stone(new Vector3(0, 14, 3))), COMMON_OBJECT),
-                col(dis(new Stone(new Vector3(15, 15, 15))), COMMON_OBJECT)
+                col(dis(new Stone1(new Vector3(0, 14, 3))), COMMON_OBJECT),
+                col(dis(new Stone2(new Vector3(15, 15, 15))), COMMON_OBJECT)
         ).forEach(st -> {
-            updatables.add(st);
             sceneManager.addScene(st.getScene());
         });
 
@@ -87,32 +77,32 @@ public class UwScene extends ApplicationAdapter {
         //         V
 
         // setup light
-        light = new DirectionalLightEx();
+        DirectionalLight light = new DirectionalShadowLight();
         light.direction.set(1, 0, 1).nor();
-        light.color.set(Color.WHITE);
+        light.color.set(Color.rgba8888(96, 151, 240, 1));
         sceneManager.environment.add(light);
 
         // setup quick IBL (image based lighting)
         IBLBuilder iblBuilder = IBLBuilder.createOutdoor(light);
-        environmentCubemap = iblBuilder.buildEnvMap(1024);
+        Cubemap environmentCubemap = iblBuilder.buildEnvMap(1024);
         disposables.add(environmentCubemap);
-        diffuseCubemap = iblBuilder.buildIrradianceMap(256);
+        Cubemap diffuseCubemap = iblBuilder.buildIrradianceMap(256);
         disposables.add(diffuseCubemap);
-        specularCubemap = iblBuilder.buildRadianceMap(10);
+        Cubemap specularCubemap = iblBuilder.buildRadianceMap(10);
         disposables.add(specularCubemap);
         iblBuilder.dispose();
 
         // This texture is provided by the library, no need to have it in your assets.
-        brdfLUT = new Texture(Gdx.files.classpath("net/mgsx/gltf/shaders/brdfLUT.png"));
+        Texture brdfLUT = new Texture(Gdx.files.classpath("net/mgsx/gltf/shaders/brdfLUT.png"));
         disposables.add(brdfLUT);
 
-        sceneManager.setAmbientLight(1000f);
+        sceneManager.setAmbientLight(1f);
         sceneManager.environment.set(new PBRTextureAttribute(PBRTextureAttribute.BRDFLUTTexture, brdfLUT));
         sceneManager.environment.set(PBRCubemapAttribute.createSpecularEnv(specularCubemap));
         sceneManager.environment.set(PBRCubemapAttribute.createDiffuseEnv(diffuseCubemap));
 
         // setup skybox
-        skybox = new SceneSkybox(environmentCubemap);
+        SceneSkybox skybox = new SceneSkybox(environmentCubemap);
         disposables.add(skybox);
         sceneManager.setSkyBox(skybox);
     }
@@ -121,31 +111,6 @@ public class UwScene extends ApplicationAdapter {
     public void resize(int width, int height) {
         sceneManager.updateViewport(width, height);
     }
-
-//    private void processInput(float deltaTime) {
-//        playerTransform.set(scene.modelInstance.transform);
-//
-//        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-//            moveTransition.z += speed * deltaTime;
-//        }
-//        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-//            moveTransition.z -= speed * deltaTime;
-//        }
-//        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-//            moveTransition.x += speed * deltaTime;
-//        }
-//        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-//            moveTransition.x -= speed * deltaTime;
-//        }
-//
-//        playerTransform.translate(moveTransition);
-//
-//        scene.modelInstance.transform.set(playerTransform);
-//
-//        scene.modelInstance.transform.getTranslation(curPosition);
-//
-//        moveTransition.set(0, 0, 0);
-//    }
 
     @Override
     public void render() {
@@ -173,6 +138,11 @@ public class UwScene extends ApplicationAdapter {
 
     private <T extends BasicGltfObject> T col(T obj, CollisionRegistry.ObjectType type) {
         cRegistry.add(type, obj);
+        return obj;
+    }
+
+    private <T extends BasicGltfObject> T upd(T obj) {
+        updatables.add(obj);
         return obj;
     }
 }

@@ -1,6 +1,7 @@
 package com.uw.object.unplayable.impl;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
@@ -37,15 +38,11 @@ public class SandTerrain extends Terrain {
         var height = boundingBox.getHeight();
         var offset = boundingBox.min.y;
 
-        var c = heightMap.getPixel(x2, y2);
-        int r = (c >> 24) & 0xFF;
-        int g = (c >> 16) & 0xFF;
-        int b = (c >> 8) & 0xFF;
+        var c = new Color(heightMap.getPixel(x2, y2));
 
-        float midColor = (r + g + b) / 3f;
-        var colorCoefficient = midColor / 255.0f;
+        float midColorCoefficient = (c.r + c.g + c.b) / 3f;
 
-        return (height + offset) * colorCoefficient;
+        return (height + offset) * midColorCoefficient;
     }
 }
     
