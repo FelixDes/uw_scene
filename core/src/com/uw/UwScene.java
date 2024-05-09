@@ -10,8 +10,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
+import com.uw.object.unplayable.BasicGltfObject;
 import com.uw.object.unplayable.impl.SandTerrain;
 import com.uw.object.unplayable.impl.Stone;
+import com.uw.service.CollisionRegistry;
+import com.uw.service.WorldInteractionResolverService;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx;
@@ -22,9 +25,15 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.uw.service.CollisionRegistry.ObjectType.COMMON_OBJECT;
+import static com.uw.service.CollisionRegistry.ObjectType.TERRAIN;
+
 public class UwScene extends ApplicationAdapter {
     private final Set<Disposable> disposables = new HashSet<>();
     private final Set<RenderUpdatable> updatables = new HashSet<>();
+
+    private CollisionRegistry cRegistry;
+    private WorldInteractionResolverService interactionResolver;
 
     private BodilessPlayer player;
     private SceneManager sceneManager;
@@ -43,25 +52,39 @@ public class UwScene extends ApplicationAdapter {
     public void create() {
         Gdx.input.setCursorPosition(0, 0);
 //        Gdx.input.setCursorCatched(true);
+
         // create scene
         sceneManager = dis(new SceneManager());
 
-        SandTerrain terrain = dis(new SandTerrain(new Vector3(0, 0, 0)));
+        // create collision registry
+        cRegistry = new CollisionRegistry();
+
+        // create terrain
+        SandTerrain terrain = col(dis(new SandTerrain(new Vector3(0, 0, 0))), TERRAIN);
         sceneManager.addScene(terrain.getScene());
 
+        // create interaction resolver
+        interactionResolver = new WorldInteractionResolverService(terrain, cRegistry);
+
+        // create common objects
         Set.of(
-                dis(new Stone(new Vector3(0, 1, 0))),
-                dis(new Stone(new Vector3(0, 1, 0)))
+                col(dis(new Stone(new Vector3(0, 14, 3))), COMMON_OBJECT),
+                col(dis(new Stone(new Vector3(15, 15, 15))), COMMON_OBJECT)
         ).forEach(st -> {
             updatables.add(st);
             sceneManager.addScene(st.getScene());
         });
 
-        player = new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0));
+        player = new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0), interactionResolver);
         sceneManager.setCamera(player.getCamera());
 
         Gdx.input.setInputProcessor(player);
         updatables.add(player);
+
+
+        // Some default shit
+        //         |
+        //         V
 
         // setup light
         light = new DirectionalLightEx();
@@ -145,6 +168,11 @@ public class UwScene extends ApplicationAdapter {
 
     private <T extends Disposable> T dis(T obj) {
         disposables.add(obj);
+        return obj;
+    }
+
+    private <T extends BasicGltfObject> T col(T obj, CollisionRegistry.ObjectType type) {
+        cRegistry.add(type, obj);
         return obj;
     }
 }

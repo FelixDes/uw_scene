@@ -16,7 +16,8 @@ public class SandTerrain extends Terrain {
         super(position, Gdx.files.internal("3d/terrain/terrain.gltf"), new Pixmap(Gdx.files.internal("3d/terrain/heightmap.png")));
         this.sceneAsset.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
 
-        boundingBox = new ModelInstance(this.sceneAsset.scene.model).calculateBoundingBox(new BoundingBox());
+        var mi = new ModelInstance(this.sceneAsset.scene.model);
+        boundingBox = mi.calculateBoundingBox(new BoundingBox()).mul(mi.transform);
     }
 
     @Override
@@ -37,15 +38,15 @@ public class SandTerrain extends Terrain {
         var offset = Math.abs(boundingBox.min.y);
 
         var c = heightMap.getPixel(x2, y2);
-        int alpha = (c >> 24) & 0xFF;
-        int red = (c >> 16) & 0xFF;
-        int green = (c >> 8) & 0xFF;
-        int blue = c & 0xFF;
+        int r = (c >> 24) & 0xFF;
+        int g = (c >> 16) & 0xFF;
+        int b = (c >> 8) & 0xFF;
+        int al = c & 0xFF;
 
-        System.out.println("Alpha: " + alpha);
-        System.out.println("Red: " + red);
-        System.out.println("Green: " + green);
-        System.out.println("Blue: " + blue);
+        System.out.println("Red: " + r);
+        System.out.println("Green: " + g);
+        System.out.println("Blue: " + b);
+        System.out.println("Alpha: " + al);
         System.out.println(c);
         // todo: calc colorCoefficient
         var colorCoefficient = 1;

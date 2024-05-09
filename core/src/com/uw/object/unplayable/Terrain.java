@@ -4,10 +4,13 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector3;
 
+import static com.uw.service.collision.CollisionPolicyStrategy.OVER;
+
 public abstract class Terrain extends BasicGltfObject {
     protected final Pixmap heightMap;
+
     protected Terrain(Vector3 position, FileHandle modelFile, Pixmap heightMap) {
-        super(position, modelFile);
+        super(position, modelFile, OVER);
         this.heightMap = heightMap;
     }
 

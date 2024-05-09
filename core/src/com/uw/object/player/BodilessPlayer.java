@@ -3,7 +3,6 @@ package com.uw.object.player;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
@@ -11,17 +10,19 @@ import com.uw.RenderUpdatable;
 import com.uw.domain.Position;
 import com.uw.service.WorldInteractionResolverService;
 
-public class BodilessPlayer extends InputAdapter implements RenderUpdatable  {
+import static com.uw.service.WorldInteractionResolverService.HeightOffsetResolvingType.KEEP;
+
+public class BodilessPlayer extends InputAdapter implements RenderUpdatable {
     // CAMERA
     private final PerspectiveCamera camera;
 
     public static final float FOV = 90;
     public static final float NEAR = 1;
     public static final float FAR = 200;
-    public static float playerHeight = 1;
+    public static float playerHeight = 1.5f;
     private static final float SENSITIVITY = 0.2f;
     private Vector3 rotationVector = new Vector3(0, 0, 1);
-    private Vector3 rotationRotatedVector = new Vector3(-1, 0 , 0);
+    private Vector3 rotationRotatedVector = new Vector3(-1, 0, 0);
     private final Vector3 tmp = new Vector3();
 
     // MOVEMENT
@@ -94,21 +95,29 @@ public class BodilessPlayer extends InputAdapter implements RenderUpdatable  {
             computedSideSpeed *= boostedSpeedMultiplier;
         }
 
-        Vector3 shift = new Vector3(0,0,0);
+        // split vector and process its parts separately
+        Vector3 shift = new Vector3(0, 0, 0);
+        boolean wasMoved = false;
         if (keys.containsKey(Input.Keys.W)) {
             shift.mulAdd(rotationVector, computedForwardSpeed);
+            wasMoved = true;
         }
         if (keys.containsKey(Input.Keys.S)) {
             shift.mulAdd(rotationVector.cpy().scl(-1), computedForwardSpeed);
+            wasMoved = true;
         }
         if (keys.containsKey(Input.Keys.A)) {
             shift.mulAdd(rotationRotatedVector.cpy().scl(-1), computedSideSpeed);
+            wasMoved = true;
         }
         if (keys.containsKey(Input.Keys.D)) {
             shift.mulAdd(rotationRotatedVector, computedSideSpeed);
+            wasMoved = true;
         }
 
-        moveService.performMove(position, shift);
+        if (wasMoved) {
+            moveService.performPlayerMove(position, shift, KEEP);
+        }
 
         camera.position.set(position.getPos());
         camera.update(true);
