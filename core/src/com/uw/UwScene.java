@@ -51,7 +51,7 @@ public class UwScene extends ApplicationAdapter {
     @Override
     public void create() {
         Gdx.input.setCursorPosition(0, 0);
-//        Gdx.input.setCursorCatched(true);
+        Gdx.input.setCursorCatched(true);
 
         // create scene
         sceneManager = dis(new SceneManager());

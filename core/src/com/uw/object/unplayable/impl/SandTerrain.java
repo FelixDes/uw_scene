@@ -13,7 +13,7 @@ public class SandTerrain extends Terrain {
     private final BoundingBox boundingBox;
 
     public SandTerrain(Vector3 position) {
-        super(position, Gdx.files.internal("3d/terrain/terrain.gltf"), new Pixmap(Gdx.files.internal("3d/terrain/heightmap.png")));
+        super(position, Gdx.files.internal("3d/terrain/terrain.gltf"), new Pixmap(Gdx.files.internal("3d/terrain/hm.png")));
         this.sceneAsset.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
 
         var mi = new ModelInstance(this.sceneAsset.scene.model);
@@ -35,21 +35,15 @@ public class SandTerrain extends Terrain {
         int y2 = (int) (h2 * y1 / h1);
 
         var height = boundingBox.getHeight();
-        var offset = Math.abs(boundingBox.min.y);
+        var offset = boundingBox.min.y;
 
         var c = heightMap.getPixel(x2, y2);
         int r = (c >> 24) & 0xFF;
         int g = (c >> 16) & 0xFF;
         int b = (c >> 8) & 0xFF;
-        int al = c & 0xFF;
 
-        System.out.println("Red: " + r);
-        System.out.println("Green: " + g);
-        System.out.println("Blue: " + b);
-        System.out.println("Alpha: " + al);
-        System.out.println(c);
-        // todo: calc colorCoefficient
-        var colorCoefficient = 1;
+        float midColor = (r + g + b) / 3f;
+        var colorCoefficient = midColor / 255.0f;
 
         return (height + offset) * colorCoefficient;
     }
