@@ -9,12 +9,15 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.uw.object.unplayable.Terrain;
 
+import static com.uw.ConstantsKt.SAND_TERRAIN_HEIGHTMAP;
+import static com.uw.ConstantsKt.SAND_TERRAIN_MODEL;
+
 
 public class SandTerrain extends Terrain {
     private final BoundingBox boundingBox;
 
     public SandTerrain(Vector3 position) {
-        super(position, Gdx.files.internal("3d/terrain/terrain.gltf"), new Pixmap(Gdx.files.internal("3d/terrain/hm.png")));
+        super(position, Gdx.files.internal(SAND_TERRAIN_MODEL), new Pixmap(Gdx.files.internal(SAND_TERRAIN_HEIGHTMAP)));
         this.sceneAsset.textures.forEach(texture -> texture.setFilter(Texture.TextureFilter.MipMapLinearLinear, Texture.TextureFilter.MipMapLinearLinear));
 
         var mi = new ModelInstance(this.sceneAsset.scene.model);
@@ -35,8 +38,8 @@ public class SandTerrain extends Terrain {
         int x2 = (int) (w2 * x1 / w1);
         int y2 = (int) (h2 * y1 / h1);
 
-        var height = boundingBox.getHeight();
-        var offset = boundingBox.min.y;
+        float height = boundingBox.getHeight();
+        float offset = boundingBox.min.y;
 
         var c = new Color(heightMap.getPixel(x2, y2));
 

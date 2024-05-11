@@ -8,13 +8,14 @@ import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
-import com.uw.object.unplayable.BasicGltfObject;
+import com.uw.object.unplayable.BasicObject;
 import com.uw.object.unplayable.impl.SandTerrain;
-import com.uw.object.unplayable.impl.Stone1;
-import com.uw.object.unplayable.impl.Stone2;
+import com.uw.object.unplayable.impl.Stone;
 import com.uw.service.CollisionRegistry;
 import com.uw.service.WorldInteractionResolverService;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
@@ -59,8 +60,12 @@ public class UwScene extends ApplicationAdapter {
 
         // create common objects
         Set.of(
-                col(dis(new Stone1(new Vector3(0, 14, 3))), COMMON_OBJECT),
-                col(dis(new Stone2(new Vector3(15, 15, 15))), COMMON_OBJECT)
+                col(dis(new Stone(new Matrix4()
+                        .set(
+                                new Vector3(-10, 5, 13),
+                                new Quaternion(),
+                                new Vector3(5, 5, 5)
+                        ))), COMMON_OBJECT)
         ).forEach(st -> {
             sceneManager.addScene(st.getScene());
         });
@@ -72,13 +77,13 @@ public class UwScene extends ApplicationAdapter {
         updatables.add(player);
 
 
-        // Some default shit
+        // Some default shit goes here
         //         |
         //         V
 
         // setup light
         DirectionalLight light = new DirectionalShadowLight();
-        light.direction.set(1, 0, 1).nor();
+        light.direction.set(1, -4, 1).nor();
         light.color.set(Color.rgba8888(96, 151, 240, 1));
         sceneManager.environment.add(light);
 
@@ -136,12 +141,12 @@ public class UwScene extends ApplicationAdapter {
         return obj;
     }
 
-    private <T extends BasicGltfObject> T col(T obj, CollisionRegistry.ObjectType type) {
+    private <T extends BasicObject> T col(T obj, CollisionRegistry.ObjectType type) {
         cRegistry.add(type, obj);
         return obj;
     }
 
-    private <T extends BasicGltfObject> T upd(T obj) {
+    private <T extends BasicObject> T upd(T obj) {
         updatables.add(obj);
         return obj;
     }

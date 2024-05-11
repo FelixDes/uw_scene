@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector3;
 
 import static com.uw.service.collision.CollisionPolicyStrategy.OVER;
 
-public abstract class Terrain extends BasicGltfObject {
+public abstract class Terrain extends BasicObject {
     protected final Pixmap heightMap;
 
     protected Terrain(Vector3 position, FileHandle modelFile, Pixmap heightMap) {
