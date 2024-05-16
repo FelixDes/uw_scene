@@ -150,7 +150,7 @@ public class WorldInteractionResolverService {
             // Enrich with vertical shift (pinned to terrain)
             var dstPosition = srcPosition.getPos();
             dstPosition.y = terrain.getHeight(dstPosition.x, dstPosition.z) + heightOffset;
-        } else { // !! Src is in collision.
+        } else { // Src is in collision.
             throw new CollisionException(srcIntersecting);
         }
     }

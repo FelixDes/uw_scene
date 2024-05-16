@@ -17,8 +17,8 @@ public class BodilessPlayer extends InputAdapter implements RenderUpdatable {
     private final PerspectiveCamera camera;
 
     public static final float FOV = 90;
-    public static final float NEAR = 1;
-    public static final float FAR = 20000;
+    public static final float NEAR = 0.01f;
+    public static final float FAR = 1000;
     public static float playerHeight = 3f;
     private static final float SENSITIVITY = 0.5f;
     private Vector3 rotationVector = new Vector3(0, 0, 1);

@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
 import com.uw.object.unplayable.BasicObject;
+import com.uw.object.unplayable.impl.CapsuleTop;
 import com.uw.object.unplayable.impl.SandTerrain;
 import com.uw.object.unplayable.impl.Stone;
 import com.uw.service.CollisionRegistry;
@@ -62,10 +63,11 @@ public class UwScene extends ApplicationAdapter {
         Set.of(
                 col(dis(new Stone(new Matrix4()
                         .set(
-                                new Vector3(-10, 5, 13),
+                                new Vector3(-15, 5, 25),
                                 new Quaternion(),
                                 new Vector3(5, 5, 5)
-                        ))), COMMON_OBJECT)
+                        ))), COMMON_OBJECT),
+                col(dis(new CapsuleTop(new Vector3(0, 13.5f, 0))), COMMON_OBJECT)
         ).forEach(st -> {
             sceneManager.addScene(st.getScene());
         });

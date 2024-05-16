@@ -3,32 +3,34 @@ package com.uw.service;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.uw.object.unplayable.BasicObject;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CollisionRegistry {
     public enum ObjectType {TERRAIN, COMMON_OBJECT, INTERACTABLE}
 
-    private final EnumMap<ObjectType, Map<BasicObject, BoundingBox>> boxesMap = new EnumMap<>(ObjectType.class);
+    private final EnumMap<ObjectType, Set<BasicObject>> boxesMap = new EnumMap<>(ObjectType.class);
 
     public void add(ObjectType key, BasicObject object) {
-        var b = boxesMap.getOrDefault(key, new HashMap<>(10));
-        var mi = object.getScene().modelInstance;
-        b.put(
-                object,
-                mi.calculateBoundingBox(new BoundingBox()).mul(mi.transform)
-        );
+        var b = boxesMap.getOrDefault(key, new HashSet<>(10));
+        b.add(object);
         boxesMap.put(key, b);
     }
 
     public Set<BasicObject> getIntersecting(BoundingBox target, ObjectType key) {
         var result = new HashSet<BasicObject>();
-        var boxes =  boxesMap.get(key);
-        if (boxes == null) {
+        var boxes = boxesMap.get(key);
+        if (boxes == null || boxes.isEmpty()) {
             return result;
         }
-        for (var entry : boxes.entrySet()) {
-            if (entry.getValue().intersects(target)) {
-                result.add(entry.getKey());
+        for (var entry : boxes) {
+            var solids = entry.getSolidBoundingBoxes();
+            var empties = entry.getEmptyBoundingBoxes();
+            if (empties.stream().noneMatch(it -> it.intersects(target))) {
+                if (solids.stream().anyMatch(it -> it.intersects(target))) {
+                    result.add(entry);
+                }
             }
         }
         return result;
