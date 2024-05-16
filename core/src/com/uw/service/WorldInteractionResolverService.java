@@ -34,10 +34,8 @@ public class WorldInteractionResolverService {
             case RESET -> 0f;
         };
 
-        var srcBoundingBox = new BoundingBox(srcPosition.getPos().cpy(), srcPosition.getPos().cpy());
-
         var srcIntersecting = collisionRegistry.getIntersecting(
-                srcBoundingBox,
+                srcPosition.getPos(),
                 COMMON_OBJECT
         );
 
@@ -166,16 +164,17 @@ public class WorldInteractionResolverService {
 
         while (true) {
             shiftedPosition.add(shiftPerStep);
-            var shiftedPosBoundingBox = new BoundingBox(
-                    shiftedPosition, shiftedPosition
-            );
             realShiftLength += STEP;
-            var intersecting = collisionRegistry.getIntersecting(shiftedPosBoundingBox, COMMON_OBJECT).stream().filter(o -> switch (o.getCollisionPolicyStrategy()) {
-                case IgnoreCollisionPolicyStrategy ignore -> false;
-                case NeverCollisionPolicyStrategy ignore -> true;
-                case OverCollisionPolicyStrategy ignore -> true;
-                case OverWithMaxCollisionPolicyStrategy ignore -> true;
-            }).toList();
+            var intersecting = collisionRegistry
+                    .getIntersecting(shiftedPosition, COMMON_OBJECT)
+                    .stream()
+                    .filter(o -> switch (o.getCollisionPolicyStrategy()) {
+                        case IgnoreCollisionPolicyStrategy ignore -> false;
+                        case NeverCollisionPolicyStrategy ignore -> true;
+                        case OverCollisionPolicyStrategy ignore -> true;
+                        case OverWithMaxCollisionPolicyStrategy ignore -> true;
+                    })
+                    .toList();
             if (intersecting.isEmpty() && requestedShiftLength >= realShiftLength) {
                 srcPosition.getPos().add(shiftPerStep);
                 moved = true;

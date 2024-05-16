@@ -1,5 +1,6 @@
 package com.uw.service;
 
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.uw.object.unplayable.BasicObject;
 
@@ -18,7 +19,7 @@ public class CollisionRegistry {
         boxesMap.put(key, b);
     }
 
-    public Set<BasicObject> getIntersecting(BoundingBox target, ObjectType key) {
+    public Set<BasicObject> getIntersecting(Vector3 target, ObjectType key) {
         var result = new HashSet<BasicObject>();
         var boxes = boxesMap.get(key);
         if (boxes == null || boxes.isEmpty()) {
@@ -27,8 +28,8 @@ public class CollisionRegistry {
         for (var entry : boxes) {
             var solids = entry.getSolidBoundingBoxes();
             var empties = entry.getEmptyBoundingBoxes();
-            if (empties.stream().noneMatch(it -> it.intersects(target))) {
-                if (solids.stream().anyMatch(it -> it.intersects(target))) {
+            if (empties.stream().noneMatch(it -> it.contains(target))) {
+                if (solids.stream().anyMatch(it -> it.contains(target))) {
                     result.add(entry);
                 }
             }

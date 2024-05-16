@@ -4,7 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.uw.object.unplayable.BasicObject;
-import com.uw.service.boundingbox.AutoFill;
+import com.uw.service.bounding.policy.AutoFill;
 
 import static com.uw.ConstantsKt.STONE;
 import static com.uw.service.collision.CollisionPolicyStrategy.NEVER;

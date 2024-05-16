@@ -3,7 +3,7 @@ package com.uw.object.unplayable;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector3;
-import com.uw.service.boundingbox.AutoFill;
+import com.uw.service.bounding.policy.AutoFill;
 
 import static com.uw.service.collision.CollisionPolicyStrategy.OVER;
 

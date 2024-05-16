@@ -7,10 +7,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.RenderUpdatable;
-import com.uw.service.boundingbox.AddSolidManual;
-import com.uw.service.boundingbox.AutoFill;
-import com.uw.service.boundingbox.BoundingBoxPolicy;
-import com.uw.service.boundingbox.ManualEmpty;
+import com.uw.service.bounding.Boundary;
+import com.uw.service.bounding.BoundingBoxAdapter;
+import com.uw.service.bounding.policy.*;
 import com.uw.service.collision.CollisionPolicyStrategy;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import net.mgsx.gltf.scene3d.scene.Scene;
@@ -25,20 +24,20 @@ public abstract class BasicObject implements RenderUpdatable, Disposable {
     protected final GLTFLoader loader;
     protected final Scene scene;
     protected final SceneAsset sceneAsset;
-    protected final Set<BoundingBox> solidBoundingBoxes;
-    protected final Set<BoundingBox> emptyBoundingBoxes;
+    protected final Set<Boundary> solidBoundingBoxes;
+    protected final Set<Boundary> emptyBoundingBoxes;
 
     protected BasicObject(
             Vector3 position,
             FileHandle modelFile,
             CollisionPolicyStrategy collisionPolicyStrategy,
-            BoundingBoxPolicy boundingBoxPolicy
+            BoundingPolicy boundingPolicy
     ) {
         this(
                 new Matrix4(position, new Quaternion(), new Vector3(1, 1, 1)),
                 modelFile,
                 collisionPolicyStrategy,
-                boundingBoxPolicy
+                boundingPolicy
         );
     }
 
@@ -46,7 +45,7 @@ public abstract class BasicObject implements RenderUpdatable, Disposable {
             Matrix4 transform,
             FileHandle modelFile,
             CollisionPolicyStrategy collisionPolicyStrategy,
-            BoundingBoxPolicy boundingBoxPolicy
+            BoundingPolicy boundingPolicy
     ) {
         this.collisionPolicyStrategy = collisionPolicyStrategy;
         this.loader = new GLTFLoader();
@@ -55,24 +54,33 @@ public abstract class BasicObject implements RenderUpdatable, Disposable {
         scene.modelInstance.transform.set(transform);
 
         var mi = scene.modelInstance;
-        switch (boundingBoxPolicy) {
+
+        Set<Boundary> _solidBoundingBoxes;
+        Set<Boundary> _emptyBoundingBoxes;
+
+        switch (boundingPolicy) {
             case AutoFill ignored -> {
-                solidBoundingBoxes = Set.of(mi.calculateBoundingBox(new BoundingBox()).mul(mi.transform));
-                emptyBoundingBoxes = Set.of();
+                _solidBoundingBoxes = Set.of(new BoundingBoxAdapter(mi.calculateBoundingBox(new BoundingBox())));
+                _emptyBoundingBoxes = Set.of();
             }
             case ManualEmpty manualEmpty -> {
-                solidBoundingBoxes = Set.of(mi.calculateBoundingBox(new BoundingBox()).mul(mi.transform));
-                emptyBoundingBoxes = manualEmpty.empty().stream().map(it -> it.mul(mi.transform)).collect(Collectors.toSet());
+                _solidBoundingBoxes = Set.of(new BoundingBoxAdapter(mi.calculateBoundingBox(new BoundingBox())));
+                _emptyBoundingBoxes = manualEmpty.empty();
             }
             case AddSolidManual addSolidManual -> {
-                solidBoundingBoxes = new HashSet<>();
-                solidBoundingBoxes.add(mi.calculateBoundingBox(new BoundingBox()).mul(mi.transform));
-                for (var solid : addSolidManual.addSolid()) {
-                    solidBoundingBoxes.add(solid.mul(mi.transform));
-                }
-                emptyBoundingBoxes = addSolidManual.empty().stream().map(it -> it.mul(mi.transform)).collect(Collectors.toSet());
+                _solidBoundingBoxes = new HashSet<>();
+                _solidBoundingBoxes.add(new BoundingBoxAdapter(mi.calculateBoundingBox(new BoundingBox())));
+                _solidBoundingBoxes.addAll(addSolidManual.addSolid());
+                _emptyBoundingBoxes = addSolidManual.empty();
+            }
+            case FullManual fullManual -> {
+                _solidBoundingBoxes = fullManual.solid();
+                _emptyBoundingBoxes = fullManual.empty();
             }
         }
+
+        solidBoundingBoxes = _solidBoundingBoxes.stream().map(it -> it.mul(mi.transform)).collect(Collectors.toSet());
+        emptyBoundingBoxes = _emptyBoundingBoxes.stream().map(it -> it.mul(mi.transform)).collect(Collectors.toSet());
     }
 
     public Scene getScene() {
@@ -92,11 +100,11 @@ public abstract class BasicObject implements RenderUpdatable, Disposable {
     public void update(float delta) {
     }
 
-    public Set<BoundingBox> getSolidBoundingBoxes() {
+    public Set<Boundary> getSolidBoundingBoxes() {
         return solidBoundingBoxes;
     }
 
-    public Set<BoundingBox> getEmptyBoundingBoxes() {
+    public Set<Boundary> getEmptyBoundingBoxes() {
         return emptyBoundingBoxes;
     }
 }
