@@ -7,10 +7,15 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
 import com.uw.object.unplayable.BasicObject;
@@ -40,6 +45,9 @@ public class UwScene extends ApplicationAdapter {
 
     private BodilessPlayer player;
     private SceneManager sceneManager;
+
+    Array<Decal> decals = new Array<Decal>();
+    DecalBatch batch;
 
     @Override
     public void create() {
@@ -112,6 +120,13 @@ public class UwScene extends ApplicationAdapter {
         SceneSkybox skybox = new SceneSkybox(environmentCubemap);
         disposables.add(skybox);
         sceneManager.setSkyBox(skybox);
+
+
+        TextureRegion[] textures = {new TextureRegion(new Texture(Gdx.files.internal("3d/terrain/texture/seamless_beach_sand_texture_by_hhh316_d4hr45u.jpg")))};
+        batch = new DecalBatch(new CameraGroupStrategy(player.getCamera()));
+        Decal decal = Decal.newDecal(100, 100, textures[0]);
+        decal.setPosition(0, 0, 0);
+        decals.add(decal);
     }
 
     @Override
@@ -129,8 +144,20 @@ public class UwScene extends ApplicationAdapter {
 
         // render
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         sceneManager.update(deltaTime);
         sceneManager.render();
+
+
+
+        for (int i = 0; i < decals.size; i++) {
+            Decal decal = decals.get(i);
+            decal.setPosition(player.getCamera().position.cpy().add(0, 1, 0));
+
+            decal.lookAt(player.getCamera().position, player.getCamera().up);
+            batch.add(decal);
+        }
+        batch.flush();
     }
 
     @Override
