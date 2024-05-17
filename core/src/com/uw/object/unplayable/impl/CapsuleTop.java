@@ -16,13 +16,13 @@ public class CapsuleTop extends BasicObject {
     public CapsuleTop(Vector3 position) {
         super(position, Gdx.files.internal(CAPSULE_TOP), NEVER, FullManual.of(
                 Set.of(new BoundingCylinder(
-                        new Vector3(-18.76f, 0, -3f),
-                        new Vector3(18.76f, 13.3f, 3),
+                        new Vector3(-18.75f,-10f,-18.75f),
+                        new Vector3(18.75f, 34f,18.75f),
                         Vector3.Y
                 )),
                 Set.of(new BoundingBoxAdapter(
-                        new Vector3(-18.750004f,-10f,-18.750011f),
-                        new Vector3(18.75f,33.352787f,18.750004f)
+                        new Vector3(-18.76f, 0, -3f),
+                        new Vector3(18.76f, 13.3f, 3)
                 ))
         ));
     }

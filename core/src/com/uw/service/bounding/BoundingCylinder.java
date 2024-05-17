@@ -50,7 +50,7 @@ public class BoundingCylinder implements Boundary {
             throw new IllegalStateException("impossible");
         }
         return bb.contains(point) && (Math.pow(point.x - center_x, 2) / Math.pow(radius_x, 2)
-                + Math.pow(point.y - center_y, 2) / Math.pow(radius_y, 2) < 1);
+                + Math.pow(point.z - center_y, 2) / Math.pow(radius_y, 2) < 1);
 
     }
 
