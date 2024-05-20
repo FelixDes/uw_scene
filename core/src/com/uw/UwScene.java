@@ -12,13 +12,16 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
+import com.uw.di.Context;
+import com.uw.domain.Resizable;
+import com.uw.domain.Updatable;
 import com.uw.object.player.BodilessPlayer;
 import com.uw.object.unplayable.BasicObject;
 import com.uw.object.unplayable.impl.CapsuleTop;
 import com.uw.object.unplayable.impl.SandTerrain;
 import com.uw.object.unplayable.impl.Stone;
-import com.uw.service.collision.CollisionRegistry;
 import com.uw.service.WorldInteractionResolverService;
+import com.uw.service.collision.CollisionRegistry;
 import com.uw.service.overlay.OverlayManager;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
@@ -26,16 +29,19 @@ import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.scene.SceneManager;
 import net.mgsx.gltf.scene3d.scene.SceneSkybox;
 import net.mgsx.gltf.scene3d.utils.IBLBuilder;
+import org.apache.commons.lang3.function.TriConsumer;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import static com.uw.service.collision.CollisionRegistry.ObjectType.COMMON_OBJECT;
 import static com.uw.service.collision.CollisionRegistry.ObjectType.TERRAIN;
 
 public class UwScene extends ApplicationAdapter {
     private final Set<Disposable> disposables = new HashSet<>();
-    private final Set<RenderUpdatable> updatables = new HashSet<>();
+    private final Set<Updatable> updatables = new HashSet<>();
+    private final Set<Resizable> resizables = new HashSet<>();
 
     private CollisionRegistry cRegistry;
 
@@ -44,40 +50,46 @@ public class UwScene extends ApplicationAdapter {
 
     @Override
     public void create() {
+        Context ctx = dis(Context.instance);
+
+        ctx.put(new SceneManager());
+
         Gdx.input.setCursorPosition(0, 0);
 //        Gdx.input.setCursorCatched(true);
 
         // create scene
-        sceneManager = dis(new SceneManager());
+        sceneManager = upd(res(ctx.put(new SceneManager()), SceneManager::updateViewport), SceneManager::update);
 
         // create collision registry
-        cRegistry = new CollisionRegistry();
+        cRegistry = ctx.put(new CollisionRegistry());
+
+        // create overlay manager
+        upd(res(ctx.put(new OverlayManager())));
 
         // create terrain
-        SandTerrain terrain = col(dis(new SandTerrain(new Vector3(0, 0, 0))), TERRAIN);
+        SandTerrain terrain = upd(col(dis(new SandTerrain(new Vector3(0, 0, 0))), TERRAIN));
         sceneManager.addScene(terrain.getScene());
 
         // create interaction resolver
-        var interactionResolver = new WorldInteractionResolverService(terrain, cRegistry);
+        var interactionResolver = ctx.put(new WorldInteractionResolverService(terrain, cRegistry));
 
         // create common objects
         Set.of(
-                col(dis(new Stone(new Matrix4()
+                upd(col(dis(new Stone(new Matrix4()
                         .set(
                                 new Vector3(-15, 5, 25),
                                 new Quaternion(),
                                 new Vector3(5, 5, 5)
-                        ))), COMMON_OBJECT),
-                col(dis(new CapsuleTop(new Vector3(0, 13.5f, 0))), COMMON_OBJECT)
+                        ))), COMMON_OBJECT)),
+                upd(col(dis(new CapsuleTop(new Vector3(0, 13.5f, 0))), COMMON_OBJECT))
         ).forEach(st -> {
             sceneManager.addScene(st.getScene());
         });
 
-        player = new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0), interactionResolver);
+        player = upd(new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0), interactionResolver));
         sceneManager.setCamera(player.getCamera());
 
         Gdx.input.setInputProcessor(player);
-        updatables.add(player);
 
 
         // Some default shit goes here
@@ -85,7 +97,7 @@ public class UwScene extends ApplicationAdapter {
         //         V
 
         // setup light
-        DirectionalLight light = new DirectionalShadowLight();
+        DirectionalLight light = dis(new DirectionalShadowLight());
         light.direction.set(1, -4, 1).nor();
         light.color.set(Color.rgba8888(96, 151, 240, 1));
         sceneManager.environment.add(light);
@@ -101,7 +113,7 @@ public class UwScene extends ApplicationAdapter {
         iblBuilder.dispose();
 
         // This texture is provided by the library, no need to have it in your assets.
-        Texture brdfLUT = new Texture(Gdx.files.classpath("net/mgsx/gltf/shaders/brdfLUT.png"));
+        Texture brdfLUT = dis(new Texture(Gdx.files.classpath("net/mgsx/gltf/shaders/brdfLUT.png")));
         disposables.add(brdfLUT);
 
         sceneManager.setAmbientLight(1f);
@@ -116,36 +128,19 @@ public class UwScene extends ApplicationAdapter {
     }
 
     @Override
-    public void resize(int width, int height) {
-        sceneManager.updateViewport(width, height);
-    }
-
-    @Override
     public void render() {
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-//        processInput(deltaTime);
-        updatables.forEach(updatable -> updatable.update(deltaTime));
-        player.update(deltaTime);
-
-        // render
-
-        Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-        Gdx.gl.glCullFace(GL20.GL_BACK);
-        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT);
-        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-        Gdx.gl.glEnable(Gdx.gl20.GL_BLEND);
-        Gdx.gl.glBlendFuncSeparate(
-                Gdx.gl20.GL_DST_COLOR,
-                Gdx.gl20.GL_SRC_COLOR,
-                Gdx.gl20.GL_ONE,
-                Gdx.gl20.GL_ONE);
-        sceneManager.update(deltaTime);
+        // actual render
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         sceneManager.render();
 
-        OverlayManager.instance.draw(deltaTime);
+        updatables.forEach(updatable -> updatable.update(deltaTime));
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        resizables.forEach(resizable -> resizable.resize(width, height));
     }
 
     @Override
@@ -163,8 +158,24 @@ public class UwScene extends ApplicationAdapter {
         return obj;
     }
 
-    private <T extends BasicObject> T upd(T obj) {
+    private <T extends Updatable> T upd(T obj) {
         updatables.add(obj);
+        return obj;
+    }
+
+    private <T> T upd(T obj, BiConsumer<T, Float> adapter) {
+        updatables.add((delta) -> adapter.accept(obj, delta));
+        return obj;
+    }
+
+
+    private <T extends Resizable> T res(T obj) {
+        resizables.add(obj);
+        return obj;
+    }
+
+    private <T> T res(T obj, TriConsumer<T, Integer, Integer> adapter) {
+        resizables.add((w, h) -> adapter.accept(obj, w, h));
         return obj;
     }
 }

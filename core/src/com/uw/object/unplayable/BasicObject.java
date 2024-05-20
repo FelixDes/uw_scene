@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Disposable;
-import com.uw.RenderUpdatable;
+import com.uw.domain.Updatable;
 import com.uw.service.bounding.Boundary;
 import com.uw.service.bounding.BoundingBoxAdapter;
 import com.uw.service.bounding.policy.*;
@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class BasicObject implements RenderUpdatable, Disposable {
+public abstract class BasicObject implements Updatable, Disposable {
     protected final CollisionPolicyStrategy collisionPolicyStrategy;
     protected final GLTFLoader loader;
     protected final Scene scene;

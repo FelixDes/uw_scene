@@ -3,19 +3,13 @@ package com.uw.service.overlay;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.Array;
+import com.uw.domain.Resizable;
+import com.uw.domain.Updatable;
 
-public class OverlayManager {
+public class OverlayManager implements Updatable, Resizable {
 
     private Array<Overlay> overlays = new Array<Overlay>();
     private Array<Overlay> toRemove = new Array<Overlay>();
-    public static OverlayManager instance = null;
-
-    public OverlayManager() { }
-
-    static
-    {
-        instance = new OverlayManager();
-    }
 
     // add a new overlay on top of the rest
     public void push(Overlay overlay) {
@@ -27,7 +21,6 @@ public class OverlayManager {
         overlay.show();
     }
 
-    // pop off the most recent overlay
     public void pop() {
         Overlay overlay = current();
         overlay.hide();
@@ -72,10 +65,6 @@ public class OverlayManager {
         }
     }
 
-    public void reset() {
-        overlays.clear();
-    }
-
     // return the overlay on top
     public Overlay current() {
         if(overlays.size == 0) return null;
@@ -83,7 +72,7 @@ public class OverlayManager {
     }
 
     // draw all of the overlays, in order
-    public void draw(float delta) {
+    public void update(float delta) {
 
         var gl = Gdx.gl;
 

@@ -51,8 +51,6 @@ public class WindowOverlay extends Overlay {
 
 	Vector2 offset = new Vector2();
 
-	private Color animateColor = new Color();
-
 	float keyRepeat = 0f;
 
 	public boolean playSoundOnOpen = true;
@@ -179,8 +177,6 @@ public class WindowOverlay extends Overlay {
 
 		gl = Gdx.gl;
 
-		lerpValue = animate ? lerp.apply(0, 1f, Math.min(timer * 4, 1f)) : 1f;
-		float moveLerpValue = animate ? lerp.apply(-10f, 0f, Math.min(timer * 4, 1f)) : 0f;
 
 		if(catchInput && dimScreen) {
 			uiBatch.begin();
@@ -206,10 +202,7 @@ public class WindowOverlay extends Overlay {
 			uiBatch.disableBlending();
 		}
 
-		stageTable.setPosition(0 + offset.x, moveLerpValue + offset.y);
-
-		animateColor.set(1, 1, 1, 1f * lerpValue);
-		stageTable.setColor(animateColor);
+		stageTable.setPosition(0 + offset.x, offset.y);
 
 		super.draw(delta);
 	}
@@ -224,9 +217,5 @@ public class WindowOverlay extends Overlay {
 		Table contentTable = new Table(skin);
         contentTable.add(new Label("!@#$%^&*(", skin.get(Label.LabelStyle.class)));
         return contentTable;
-	};
-
-    protected void close() {
-        OverlayManager.instance.remove(this);
-    }
+	}
 }

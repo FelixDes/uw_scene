@@ -6,15 +6,16 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
-import com.uw.RenderUpdatable;
+import com.uw.di.Context;
 import com.uw.domain.Position;
+import com.uw.domain.Updatable;
 import com.uw.service.WorldInteractionResolverService;
 import com.uw.service.overlay.OverlayManager;
 import com.uw.service.overlay.WindowOverlay;
 
 import static com.uw.service.WorldInteractionResolverService.HeightOffsetResolvingType.KEEP;
 
-public class BodilessPlayer extends InputAdapter implements RenderUpdatable {
+public class BodilessPlayer extends InputAdapter implements Updatable {
     // CAMERA
     private final PerspectiveCamera camera;
 
@@ -117,8 +118,10 @@ public class BodilessPlayer extends InputAdapter implements RenderUpdatable {
             wasMoved = true;
         }
 
-        if (keys.containsKey(Input.Keys.SPACE)) {
-            OverlayManager.instance.push(new WindowOverlay());
+        if (keys.containsKey(Input.Keys.ESCAPE)) {
+            Context.instance
+                    .get(OverlayManager.class)
+                    .push(new WindowOverlay());
         }
 
         if (wasMoved) {
