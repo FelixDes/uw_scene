@@ -1,7 +1,6 @@
-package com.uw.service;
+package com.uw.service.collision;
 
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
 import com.uw.object.unplayable.BasicObject;
 
 import java.util.EnumMap;

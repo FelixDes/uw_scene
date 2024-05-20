@@ -1,13 +1,10 @@
-package com.uw.exception;
+package com.uw.exception
 
-import com.uw.object.unplayable.BasicObject;
+import com.uw.`object`.unplayable.BasicObject
+import java.util.stream.Collectors
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
-public class CollisionException extends RuntimeException {
-    public CollisionException(Set<BasicObject> intersections) {
-        super("User stuck in object: " + intersections.stream().map(BasicObject::toString).collect(Collectors.joining(", ")));
-    }
-}
-    
+class CollisionException(intersections: Set<BasicObject>) :
+    RuntimeException(
+        "User stuck in object: " + intersections.stream().map { obj: BasicObject -> obj.toString() }
+            .collect(Collectors.joining(", "))
+    )

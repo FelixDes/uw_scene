@@ -9,6 +9,8 @@ import com.badlogic.gdx.utils.IntIntMap;
 import com.uw.RenderUpdatable;
 import com.uw.domain.Position;
 import com.uw.service.WorldInteractionResolverService;
+import com.uw.service.overlay.OverlayManager;
+import com.uw.service.overlay.WindowOverlay;
 
 import static com.uw.service.WorldInteractionResolverService.HeightOffsetResolvingType.KEEP;
 
@@ -113,6 +115,10 @@ public class BodilessPlayer extends InputAdapter implements RenderUpdatable {
         if (keys.containsKey(Input.Keys.D)) {
             shift.mulAdd(rotationRotatedVector, computedSideSpeed);
             wasMoved = true;
+        }
+
+        if (keys.containsKey(Input.Keys.SPACE)) {
+            OverlayManager.instance.push(new WindowOverlay());
         }
 
         if (wasMoved) {

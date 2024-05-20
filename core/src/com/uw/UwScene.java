@@ -7,23 +7,19 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Cubemap;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
-import com.badlogic.gdx.graphics.g3d.decals.Decal;
-import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.object.player.BodilessPlayer;
 import com.uw.object.unplayable.BasicObject;
 import com.uw.object.unplayable.impl.CapsuleTop;
 import com.uw.object.unplayable.impl.SandTerrain;
 import com.uw.object.unplayable.impl.Stone;
-import com.uw.service.CollisionRegistry;
+import com.uw.service.collision.CollisionRegistry;
 import com.uw.service.WorldInteractionResolverService;
+import com.uw.service.overlay.OverlayManager;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
@@ -34,8 +30,8 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.uw.service.CollisionRegistry.ObjectType.COMMON_OBJECT;
-import static com.uw.service.CollisionRegistry.ObjectType.TERRAIN;
+import static com.uw.service.collision.CollisionRegistry.ObjectType.COMMON_OBJECT;
+import static com.uw.service.collision.CollisionRegistry.ObjectType.TERRAIN;
 
 public class UwScene extends ApplicationAdapter {
     private final Set<Disposable> disposables = new HashSet<>();
@@ -46,13 +42,10 @@ public class UwScene extends ApplicationAdapter {
     private BodilessPlayer player;
     private SceneManager sceneManager;
 
-    Array<Decal> decals = new Array<Decal>();
-    DecalBatch batch;
-
     @Override
     public void create() {
         Gdx.input.setCursorPosition(0, 0);
-        Gdx.input.setCursorCatched(true);
+//        Gdx.input.setCursorCatched(true);
 
         // create scene
         sceneManager = dis(new SceneManager());
@@ -120,13 +113,6 @@ public class UwScene extends ApplicationAdapter {
         SceneSkybox skybox = new SceneSkybox(environmentCubemap);
         disposables.add(skybox);
         sceneManager.setSkyBox(skybox);
-
-
-        TextureRegion[] textures = {new TextureRegion(new Texture(Gdx.files.internal("3d/terrain/texture/seamless_beach_sand_texture_by_hhh316_d4hr45u.jpg")))};
-        batch = new DecalBatch(new CameraGroupStrategy(player.getCamera()));
-        Decal decal = Decal.newDecal(100, 100, textures[0]);
-        decal.setPosition(0, 0, 0);
-        decals.add(decal);
     }
 
     @Override
@@ -143,21 +129,23 @@ public class UwScene extends ApplicationAdapter {
         player.update(deltaTime);
 
         // render
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+        Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+        Gdx.gl.glCullFace(GL20.GL_BACK);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT);
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        Gdx.gl.glEnable(Gdx.gl20.GL_BLEND);
+        Gdx.gl.glBlendFuncSeparate(
+                Gdx.gl20.GL_DST_COLOR,
+                Gdx.gl20.GL_SRC_COLOR,
+                Gdx.gl20.GL_ONE,
+                Gdx.gl20.GL_ONE);
         sceneManager.update(deltaTime);
         sceneManager.render();
 
-
-
-        for (int i = 0; i < decals.size; i++) {
-            Decal decal = decals.get(i);
-            decal.setPosition(player.getCamera().position.cpy().add(0, 1, 0));
-
-            decal.lookAt(player.getCamera().position, player.getCamera().up);
-            batch.add(decal);
-        }
-        batch.flush();
+        OverlayManager.instance.draw(deltaTime);
     }
 
     @Override

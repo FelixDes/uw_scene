@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Vector3;
 import com.uw.service.bounding.policy.AutoFill;
 
-import static com.uw.service.collision.CollisionPolicyStrategy.OVER;
+import static com.uw.service.collision.strategy.CollisionPolicyStrategy.OVER;
 
 public abstract class Terrain extends BasicObject {
     protected final Pixmap heightMap;

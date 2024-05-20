@@ -7,7 +7,7 @@ import com.uw.object.unplayable.BasicObject;
 import com.uw.service.bounding.policy.AutoFill;
 
 import static com.uw.ConstantsKt.STONE;
-import static com.uw.service.collision.CollisionPolicyStrategy.NEVER;
+import static com.uw.service.collision.strategy.CollisionPolicyStrategy.NEVER;
 
 public class Stone extends BasicObject {
     public Stone(Vector3 position) {

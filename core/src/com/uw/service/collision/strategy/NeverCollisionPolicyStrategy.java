@@ -1,4 +1,4 @@
-package com.uw.service.collision;
+package com.uw.service.collision.strategy;
 
 public record NeverCollisionPolicyStrategy()
         implements CollisionPolicyStrategy {

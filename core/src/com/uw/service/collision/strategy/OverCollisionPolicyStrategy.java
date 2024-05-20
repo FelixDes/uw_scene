@@ -1,4 +1,4 @@
-package com.uw.service.collision;
+package com.uw.service.collision.strategy;
 
 // todo: not handled yet
 public record OverCollisionPolicyStrategy()

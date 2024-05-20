@@ -4,14 +4,15 @@ import com.badlogic.gdx.math.Vector3;
 import com.uw.domain.Position;
 import com.uw.exception.CollisionException;
 import com.uw.object.unplayable.Terrain;
-import com.uw.service.collision.IgnoreCollisionPolicyStrategy;
-import com.uw.service.collision.NeverCollisionPolicyStrategy;
-import com.uw.service.collision.OverCollisionPolicyStrategy;
-import com.uw.service.collision.OverWithMaxCollisionPolicyStrategy;
+import com.uw.service.collision.CollisionRegistry;
+import com.uw.service.collision.strategy.IgnoreCollisionPolicyStrategy;
+import com.uw.service.collision.strategy.NeverCollisionPolicyStrategy;
+import com.uw.service.collision.strategy.OverCollisionPolicyStrategy;
+import com.uw.service.collision.strategy.OverWithMaxCollisionPolicyStrategy;
 
 import java.util.ArrayList;
 
-import static com.uw.service.CollisionRegistry.ObjectType.COMMON_OBJECT;
+import static com.uw.service.collision.CollisionRegistry.ObjectType.COMMON_OBJECT;
 
 public class WorldInteractionResolverService {
     private final Terrain terrain;
@@ -19,7 +20,7 @@ public class WorldInteractionResolverService {
 
     public enum HeightOffsetResolvingType {KEEP, RESET}
 
-    private final float STEP = 0.1f;
+    private final float STEP = 0.005f;
 
     public WorldInteractionResolverService(Terrain terrain, CollisionRegistry collisionRegistry) {
         this.terrain = terrain;
@@ -33,12 +34,12 @@ public class WorldInteractionResolverService {
             case RESET -> 0f;
         };
 
-        if (!collisionRegistry.getIntersecting(
-                srcPosition.getPos(),
-                COMMON_OBJECT
-        ).isEmpty()) {
-            System.out.println("will throw an error");
-        }
+//        if (!collisionRegistry.getIntersecting(
+//                srcPosition.getPos(),
+//                COMMON_OBJECT
+//        ).isEmpty()) {
+//            System.out.println("will throw an error");
+//        }
 
         var srcIntersecting = collisionRegistry.getIntersecting(
                 srcPosition.getPos(),

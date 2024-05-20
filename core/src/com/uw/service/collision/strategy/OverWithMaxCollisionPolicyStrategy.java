@@ -1,4 +1,4 @@
-package com.uw.service.collision;
+package com.uw.service.collision.strategy;
 
 import java.util.function.Function;
 

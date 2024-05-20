@@ -10,7 +10,7 @@ import com.uw.service.bounding.policy.FullManual;
 import java.util.Set;
 
 import static com.uw.ConstantsKt.CAPSULE_TOP;
-import static com.uw.service.collision.CollisionPolicyStrategy.NEVER;
+import static com.uw.service.collision.strategy.CollisionPolicyStrategy.NEVER;
 
 public class CapsuleTop extends BasicObject {
     public CapsuleTop(Vector3 position) {
@@ -21,8 +21,8 @@ public class CapsuleTop extends BasicObject {
                         Vector3.Y
                 )),
                 Set.of(new BoundingBoxAdapter(
-                        new Vector3(-18.76f, 0, -3f),
-                        new Vector3(18.76f, 13.3f, 3)
+                        new Vector3(-2.7f, -5, -18.75f),
+                        new Vector3(2.7f, 13.0f, 18.75f)
                 ))
         ));
     }
