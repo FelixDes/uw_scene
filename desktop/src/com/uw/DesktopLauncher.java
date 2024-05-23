@@ -9,6 +9,7 @@ public class DesktopLauncher {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setForegroundFPS(60);
         config.setTitle("uw_scene");
+        config.setWindowedMode(1600, 1000);
         config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 40);
         new Lwjgl3Application(new UwScene(), config);
     }

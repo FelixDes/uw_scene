@@ -1,10 +1,11 @@
 package com.uw.service;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.uw.domain.Position;
 import com.uw.exception.CollisionException;
-import com.uw.object.unplayable.Terrain;
 import com.uw.service.collision.CollisionRegistry;
+import com.uw.service.collision.TerrainRegistry;
 import com.uw.service.collision.strategy.IgnoreCollisionPolicyStrategy;
 import com.uw.service.collision.strategy.NeverCollisionPolicyStrategy;
 import com.uw.service.collision.strategy.OverCollisionPolicyStrategy;
@@ -12,18 +13,17 @@ import com.uw.service.collision.strategy.OverWithMaxCollisionPolicyStrategy;
 
 import java.util.ArrayList;
 
-import static com.uw.service.collision.CollisionRegistry.ObjectType.COMMON_OBJECT;
 
 public class WorldInteractionResolverService {
-    private final Terrain terrain;
+    private final TerrainRegistry terrainRegistry;
     private final CollisionRegistry collisionRegistry;
 
     public enum HeightOffsetResolvingType {KEEP, RESET}
 
-    private final float STEP = 0.005f;
+    private final float STEP = 0.007f;
 
-    public WorldInteractionResolverService(Terrain terrain, CollisionRegistry collisionRegistry) {
-        this.terrain = terrain;
+    public WorldInteractionResolverService(TerrainRegistry terrainRegistry, CollisionRegistry collisionRegistry) {
+        this.terrainRegistry = terrainRegistry;
         this.collisionRegistry = collisionRegistry;
     }
 
@@ -41,10 +41,7 @@ public class WorldInteractionResolverService {
 //            System.out.println("will throw an error");
 //        }
 
-        var srcIntersecting = collisionRegistry.getIntersecting(
-                srcPosition.getPos(),
-                COMMON_OBJECT
-        );
+        var srcIntersecting = collisionRegistry.getIntersecting(srcPosition.getPos());
 
         // Will perform only vector in the horizon
         if (srcIntersecting.isEmpty()) {
@@ -68,7 +65,7 @@ public class WorldInteractionResolverService {
 
             // Enrich with vertical shift (pinned to terrain)
             var dstPosition = srcPosition.getPos();
-            dstPosition.y = terrain.getHeight(dstPosition.x, dstPosition.z) + heightOffset;
+            dstPosition.y = terrainRegistry.getHeight(new Vector2(dstPosition.x, dstPosition.z))  + heightOffset;
         } else { // Src is in collision.
             throw new CollisionException(srcIntersecting);
         }
@@ -87,7 +84,7 @@ public class WorldInteractionResolverService {
             shiftedPosition.add(shiftPerStep);
             realShiftLength += STEP;
             var intersecting = collisionRegistry
-                    .getIntersecting(shiftedPosition, COMMON_OBJECT)
+                    .getIntersecting(shiftedPosition)
                     .stream()
                     .filter(o -> switch (o.getCollisionPolicyStrategy()) {
                         case IgnoreCollisionPolicyStrategy ignore -> false;
@@ -96,7 +93,10 @@ public class WorldInteractionResolverService {
                         case OverWithMaxCollisionPolicyStrategy ignore -> true;
                     })
                     .toList();
-            if (intersecting.isEmpty() && requestedShiftLength >= realShiftLength) {
+            if (intersecting.isEmpty() // pos not in obj
+                    && requestedShiftLength >= realShiftLength // pos is not too far from src
+                    && !terrainRegistry.getContainsInYProjection(new Vector2(shiftedPosition.x, shiftedPosition.z)).isEmpty()) // pos on terrain TODO: add epsilon bound
+            {
                 srcPosition.getPos().add(shiftPerStep);
                 moved = true;
             } else {
@@ -108,6 +108,6 @@ public class WorldInteractionResolverService {
     }
 
     private float getPlayerOffset(Position srcPosition) {
-        return srcPosition.getPos().y - terrain.getHeight(srcPosition.getPos().x, srcPosition.getPos().z);
+        return srcPosition.getPos().y - terrainRegistry.getHeight(new Vector2(srcPosition.getPos().x, srcPosition.getPos().z));
     }
 }

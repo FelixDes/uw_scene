@@ -10,18 +10,22 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 import com.uw.di.Context;
 import com.uw.domain.Resizable;
 import com.uw.domain.Updatable;
 import com.uw.object.player.BodilessPlayer;
-import com.uw.object.unplayable.BasicObject;
-import com.uw.object.unplayable.impl.CapsuleTop;
-import com.uw.object.unplayable.impl.SandTerrain;
-import com.uw.object.unplayable.impl.Stone;
+import com.uw.object.unplayable.obj.BoundedObject;
+import com.uw.object.unplayable.obj.CapsuleTop;
+import com.uw.object.unplayable.obj.Stone;
+import com.uw.object.unplayable.terrain.CapsuleBottom;
+import com.uw.object.unplayable.terrain.SandTerrain;
+import com.uw.object.unplayable.terrain.Terrain;
 import com.uw.service.WorldInteractionResolverService;
 import com.uw.service.collision.CollisionRegistry;
+import com.uw.service.collision.TerrainRegistry;
 import com.uw.service.overlay.OverlayManager;
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute;
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute;
@@ -35,15 +39,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import static com.uw.service.collision.CollisionRegistry.ObjectType.COMMON_OBJECT;
-import static com.uw.service.collision.CollisionRegistry.ObjectType.TERRAIN;
-
 public class UwScene extends ApplicationAdapter {
     private final Set<Disposable> disposables = new HashSet<>();
     private final Set<Updatable> updatables = new HashSet<>();
     private final Set<Resizable> resizables = new HashSet<>();
 
-    private CollisionRegistry cRegistry;
+    private CollisionRegistry collisionRegistry;
+    private TerrainRegistry terrainRegistry;
 
     private BodilessPlayer player;
     private SceneManager sceneManager;
@@ -61,17 +63,20 @@ public class UwScene extends ApplicationAdapter {
         sceneManager = upd(res(ctx.put(new SceneManager()), SceneManager::updateViewport), SceneManager::update);
 
         // create collision registry
-        cRegistry = ctx.put(new CollisionRegistry());
+        collisionRegistry = ctx.put(new CollisionRegistry());
+        terrainRegistry = ctx.put(new TerrainRegistry());
 
         // create overlay manager
         upd(res(ctx.put(new OverlayManager())));
 
         // create terrain
-        SandTerrain terrain = upd(col(dis(new SandTerrain(new Vector3(0, 0, 0))), TERRAIN));
-        sceneManager.addScene(terrain.getScene());
+        var sandTerrain = ter(upd(dis(new SandTerrain(new Vector3(0, 0, 0)))));
+        var capsuleTerrain = ter(upd(dis(new CapsuleBottom(new Vector3(0, 13, 0)))));
+        sceneManager.addScene(sandTerrain.getScene());
+        sceneManager.addScene(capsuleTerrain.getScene());
 
         // create interaction resolver
-        var interactionResolver = ctx.put(new WorldInteractionResolverService(terrain, cRegistry));
+        var interactionResolver = ctx.put(new WorldInteractionResolverService(terrainRegistry, collisionRegistry));
 
         // create common objects
         Set.of(
@@ -80,13 +85,13 @@ public class UwScene extends ApplicationAdapter {
                                 new Vector3(-15, 5, 25),
                                 new Quaternion(),
                                 new Vector3(5, 5, 5)
-                        ))), COMMON_OBJECT)),
-                upd(col(dis(new CapsuleTop(new Vector3(0, 13.5f, 0))), COMMON_OBJECT))
+                        ))))),
+                upd(col(dis(new CapsuleTop(new Vector3(0, 13f, 0)))))
         ).forEach(st -> {
             sceneManager.addScene(st.getScene());
         });
 
-        player = upd(new BodilessPlayer(new Vector3(0, terrain.getHeight(0, 0), 0), interactionResolver));
+        player = upd(new BodilessPlayer(new Vector3(0, terrainRegistry.getHeight(new Vector2(0, 0)), 0), interactionResolver));
         sceneManager.setCamera(player.getCamera());
 
         Gdx.input.setInputProcessor(player);
@@ -153,8 +158,13 @@ public class UwScene extends ApplicationAdapter {
         return obj;
     }
 
-    private <T extends BasicObject> T col(T obj, CollisionRegistry.ObjectType type) {
-        cRegistry.add(type, obj);
+    private <T extends BoundedObject> T col(T obj) {
+        collisionRegistry.add(obj);
+        return obj;
+    }
+
+    private <T extends Terrain> T ter(T obj) {
+        terrainRegistry.add(obj);
         return obj;
     }
 

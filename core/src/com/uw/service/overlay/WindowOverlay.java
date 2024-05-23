@@ -1,7 +1,6 @@
 package com.uw.service.overlay;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -9,12 +8,11 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -23,8 +21,6 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 
 public class WindowOverlay extends Overlay {
-    public class GamepadEvent extends InputEvent {}
-
 	public float timer = 0;
 	public Table stageTable;
 	public Float uiScale = null;
@@ -36,8 +32,6 @@ public class WindowOverlay extends Overlay {
 	public boolean dimScreen = true;
 
 	protected float lerpValue = 0;
-	protected Integer gamepadSelectionIndex = null;
-	protected Integer lastGamepadSelectionIndex = null;
 
 	protected Array<Actor> buttonOrder = new Array<Actor>();
 	protected ArrayMap<Actor, Label> buttonLabels = new ArrayMap<Actor, Label>();
@@ -64,7 +58,7 @@ public class WindowOverlay extends Overlay {
         if (skin != null) return;
         var at = new TextureAtlas(Gdx.files.internal("ui/skin.atlas"));
 
-        Texture windowTexture = new Texture(Gdx.files.internal("ui/window.png"));
+        Texture windowTexture = new Texture(Gdx.files.internal("ui/textures/window.png"));
         TextureAtlas.AtlasRegion windowRegion1 = at.addRegion("window", windowTexture, 0, 0, windowTexture.getWidth(), windowTexture.getHeight());
 
         windowRegion1.names = new String[]{"split", "pad"};

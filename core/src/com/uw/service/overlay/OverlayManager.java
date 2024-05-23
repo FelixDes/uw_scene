@@ -8,8 +8,8 @@ import com.uw.domain.Updatable;
 
 public class OverlayManager implements Updatable, Resizable {
 
-    private Array<Overlay> overlays = new Array<Overlay>();
-    private Array<Overlay> toRemove = new Array<Overlay>();
+    private Array<Overlay> overlays = new Array<>();
+    private Array<Overlay> toRemove = new Array<>();
 
     // add a new overlay on top of the rest
     public void push(Overlay overlay) {
@@ -57,13 +57,12 @@ public class OverlayManager implements Updatable, Resizable {
         replace(current(), newOverlay);
     }
 
-    // hide all of the overlays
-    public void clear() {
-        for (int i = 0; i < overlays.size; i++) {
-            Overlay overlay = overlays.get(i);
-            overlay.hide();
-        }
-    }
+//    public void clear() {
+//        for (int i = 0; i < overlays.size; i++) {
+//            Overlay overlay = overlays.get(i);
+//            overlay.hide();
+//        }
+//    }
 
     // return the overlay on top
     public Overlay current() {
@@ -73,7 +72,6 @@ public class OverlayManager implements Updatable, Resizable {
 
     // draw all of the overlays, in order
     public void update(float delta) {
-
         var gl = Gdx.gl;
 
         if(overlays.size > 0) {
@@ -101,11 +99,11 @@ public class OverlayManager implements Updatable, Resizable {
         toRemove.clear();
     }
 
-    // check whether the latest overlay wants to pause the game
-    public boolean shouldPauseGame() {
-        if(overlays.size == 0) return false;
-        return current().pausesGame;
-    }
+//    // check whether the latest overlay wants to pause the game
+//    public boolean shouldPauseGame() {
+//        if(overlays.size == 0) return false;
+//        return current().pausesGame;
+//    }
 
     public void resize(int newWidth, int newHeight) {
         for(int i = 0; i < overlays.size; i++) {
